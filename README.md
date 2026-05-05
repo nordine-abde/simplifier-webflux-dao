@@ -4,7 +4,7 @@
 
 It focuses on explicit, testable DAO methods instead of replacing Spring Data repository internals. Repositories stay thin, while DAO services handle entity lifecycle timestamps, required reads, soft delete, count-returning deletes, classic pagination, cursor pagination, and streaming reads.
 
-> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. T02 has added the reusable entity hierarchy. T03 has added thin repository marker interfaces. DAO-service examples below describe the planned v1 API and will become available as later implementation phases land.
+> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. T02 has added the reusable entity hierarchy. T03 has added thin repository marker interfaces. T04 has added configurable entity-not-found exceptions. DAO-service examples below describe the planned v1 API and will become available as later implementation phases land.
 
 ## Why This Library
 
@@ -216,7 +216,15 @@ Returning `Flux<T>` from a controller does not automatically mean the HTTP respo
 
 ## Exceptions
 
-`findByIdRequired(...)` uses a configurable exception factory. By default, the library throws a generic entity-not-found exception. Applications can provide their own factory to map missing rows to domain-specific runtime exceptions.
+Required-read methods such as the planned `findByIdRequired(...)` use a configurable exception factory. The exception API is currently available:
+
+```text
+anordine.dao.simplifier.webflux.exception.EntityNotFoundException
+anordine.dao.simplifier.webflux.exception.EntityNotFoundExceptionFactory
+anordine.dao.simplifier.webflux.exception.DefaultEntityNotFoundExceptionFactory
+```
+
+By default, the library throws `EntityNotFoundException` with a message containing the entity simple name and id. Applications can provide their own `EntityNotFoundExceptionFactory` to map missing rows to domain-specific runtime exceptions.
 
 ## Development
 
@@ -250,7 +258,7 @@ The automation requires a clean git worktree before each phase, runs tests after
 
 ## Current Limitations
 
-The current codebase contains the package/test foundation, reusable entity hierarchy, and repository marker interfaces. DAO services, exception factories, metadata helpers, pagination, streaming reads, and delete behavior are still planned for later phases.
+The current codebase contains the package/test foundation, reusable entity hierarchy, repository marker interfaces, and configurable entity-not-found exceptions. DAO services, metadata helpers, pagination, streaming reads, and delete behavior are still planned for later phases.
 
 The v1 design does not include:
 
