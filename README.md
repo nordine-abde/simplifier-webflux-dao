@@ -4,7 +4,7 @@
 
 It focuses on explicit, testable DAO methods instead of replacing Spring Data repository internals. Repositories stay thin, while DAO services handle entity lifecycle timestamps, required reads, soft delete, count-returning deletes, classic pagination, cursor pagination, and streaming reads.
 
-> Status: initial implementation in progress. The design is documented in `docs/initial-design.md`, and implementation phases are tracked in `docs/implementation-tasks.md`.
+> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. The public API examples below describe the planned v1 API and will become available as later implementation phases land.
 
 ## Why This Library
 
@@ -50,7 +50,7 @@ api 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 
 Publication coordinates are not defined yet. Until the library is published, consume it as a local Gradle dependency or included build.
 
-## Entity Model
+## Planned Entity Model
 
 Hard-delete entities extend `BaseEntity<ID>` or a concrete specialization such as `UuidEntity`.
 
@@ -90,7 +90,7 @@ public class UserEntity extends SoftDeleteUuidEntity {
 }
 ```
 
-## Repositories
+## Planned Repositories
 
 Repositories remain standard Spring Data R2DBC repositories, optionally using the library marker interface:
 
@@ -105,7 +105,7 @@ public interface UserRepository
 
 No custom `@EnableR2dbcRepositories(repositoryBaseClass = ...)` configuration is required for v1.
 
-## DAO Services
+## Planned DAO Services
 
 Applications create concrete services by extending the abstract DAO service and passing the entity class explicitly.
 
@@ -197,6 +197,8 @@ Run tests:
 ./gradlew test
 ```
 
+The test suite is set up with JUnit Jupiter, Reactor Test, and an in-memory R2DBC H2 driver for focused DAO tests as implementation phases are added.
+
 List implementation phases:
 
 ```bash
@@ -219,7 +221,7 @@ The automation requires a clean git worktree before each phase, runs tests after
 
 ## Current Limitations
 
-The v1 design does not include:
+The current codebase only contains the package/test foundation. The v1 design does not include:
 
 - custom repository base-class overrides
 - automatic rewriting of derived repository methods

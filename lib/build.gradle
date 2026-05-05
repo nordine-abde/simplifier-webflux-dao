@@ -17,6 +17,8 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 
     testImplementation libs.junit.jupiter
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'io.r2dbc:r2dbc-h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
