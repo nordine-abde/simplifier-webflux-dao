@@ -4,7 +4,7 @@
 
 It focuses on explicit, testable DAO methods instead of replacing Spring Data repository internals. Repositories stay thin, while DAO services handle entity lifecycle timestamps, required reads, soft delete, count-returning deletes, classic pagination, cursor pagination, and streaming reads.
 
-> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. T02 has added the reusable entity hierarchy. T03 has added thin repository marker interfaces. T04 has added configurable entity-not-found exceptions. T05 has added the Spring Data R2DBC entity metadata resolver. T06 has added the first usable DAO service with save and basic read methods. T07 has added count-returning hard-delete and soft-delete operations. Pagination, cursor pagination, streaming reads, and raw SQL page helpers are still planned for later phases.
+> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. T02 has added the reusable entity hierarchy. T03 has added thin repository marker interfaces. T04 has added configurable entity-not-found exceptions. T05 has added the Spring Data R2DBC entity metadata resolver. T06 has added the first usable DAO service with save and basic read methods. T07 has added count-returning hard-delete and soft-delete operations. T08 has added criteria-based reads and classic count-backed pagination. Cursor pagination, streaming reads, and raw SQL page helpers are still planned for later phases.
 
 ## Why This Library
 
@@ -165,6 +165,9 @@ dao.save(user, true); // force insert with an assigned id
 dao.findById(id);
 dao.findByIdRequired(id);
 dao.findAll();
+dao.findAll(Sort.by("email").ascending());
+dao.findAll(PageRequest.of(0, 25, Sort.by("email").ascending()));
+dao.findAllByCriteria(Criteria.where("email").like("%@example.com"), pageable);
 dao.count();
 dao.deleteById(id);
 ```
@@ -187,6 +190,9 @@ findByIdRequired(id)
 existsById(id)
 count()
 findAll()
+findAll(sort)
+findAll(pageable)
+findAllByCriteria(criteria, pageable)
 findAllByIds(ids)
 delete(entity)
 deleteById(id)
@@ -236,13 +242,18 @@ If those queries target soft-delete tables, include `deleted = false` yourself.
 
 ## Pagination
 
-Pagination, cursor pagination, and streaming reads are planned for later phases. The v1 design keeps three separate read styles.
+Classic count-backed pagination is available through DAO service methods. Cursor pagination and streaming reads are planned for later phases. The v1 design keeps three separate read styles.
 
 Classic pages are useful for admin screens that need total counts:
 
 ```java
+Flux<UserEntity> sorted = dao.findAll(Sort.by("email").ascending());
+Mono<Page<UserEntity>> firstPage =
+        dao.findAll(PageRequest.of(0, 25, Sort.by("email").ascending()));
 Mono<Page<UserEntity>> page = dao.findAllByCriteria(criteria, pageable);
 ```
+
+For soft-delete entities, DAO-owned sorted, pageable, and criteria reads include `deleted = false`. Caller criteria is combined with that predicate. Total counts are computed with `R2dbcEntityTemplate.count(...)`, and page content is selected with `R2dbcEntityTemplate.select(...)`.
 
 Cursor pages are useful for efficient seek pagination:
 
@@ -303,7 +314,7 @@ The automation requires a clean git worktree before each phase, runs tests after
 
 ## Current Limitations
 
-The current codebase contains the package/test foundation, reusable entity hierarchy, repository marker interfaces, configurable entity-not-found exceptions, the entity metadata resolver, DAO-service save/basic read methods, and count-returning delete operations. Pagination, streaming reads, cursor pagination, and raw SQL page helpers are still planned for later phases.
+The current codebase contains the package/test foundation, reusable entity hierarchy, repository marker interfaces, configurable entity-not-found exceptions, the entity metadata resolver, DAO-service save/basic read methods, count-returning delete operations, and classic criteria/page reads. Streaming reads, cursor pagination, and raw SQL page helpers are still planned for later phases.
 
 The v1 design does not include:
 

@@ -19,6 +19,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -406,6 +408,95 @@ class AbstractDaoServiceTest {
                 .verifyComplete();
     }
 
+    @Test
+    void criteriaFiltersHardDeleteRows() {
+        TestContext context = createContext();
+        context.hardService()
+                .saveAll(List.of(hardFixture("alpha"), hardFixture("beta"), hardFixture("apex")))
+                .collectList()
+                .block();
+
+        StepVerifier.create(context.hardService()
+                        .findAllByCriteria(
+                                Criteria.where("name").like("a%"),
+                                PageRequest.of(0, 10, Sort.by("name").ascending())
+                        ))
+                .assertNext(page -> {
+                    assertEquals(2L, page.getTotalElements());
+                    assertEquals(List.of("alpha", "apex"), names(page.getContent()));
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void criteriaFiltersSoftDeleteRowsAndExcludesDeletedRows() {
+        TestContext context = createContext();
+        List<SoftDeleteFixture> saved = context.softService()
+                .saveAll(List.of(softFixture("alpha"), softFixture("beta"), softFixture("apex")))
+                .collectList()
+                .block();
+        assertNotNull(saved);
+        markSoftDeleted(context.client(), saved.get(2).getId());
+
+        StepVerifier.create(context.softService()
+                        .findAllByCriteria(
+                                Criteria.where("name").like("a%"),
+                                PageRequest.of(0, 10, Sort.by("name").ascending())
+                        ))
+                .assertNext(page -> {
+                    assertEquals(1L, page.getTotalElements());
+                    assertEquals(List.of("alpha"), names(page.getContent()));
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void pageableContentAndTotalCountAreCorrect() {
+        TestContext context = createContext();
+        context.hardService()
+                .saveAll(List.of(hardFixture("bravo"), hardFixture("alpha"), hardFixture("charlie")))
+                .collectList()
+                .block();
+
+        StepVerifier.create(context.hardService().findAll(
+                        PageRequest.of(1, 1, Sort.by("name").ascending())
+                ))
+                .assertNext(page -> {
+                    assertEquals(3L, page.getTotalElements());
+                    assertEquals(3, page.getTotalPages());
+                    assertEquals(1, page.getNumber());
+                    assertEquals(1, page.getNumberOfElements());
+                    assertEquals(List.of("bravo"), names(page.getContent()));
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void sortingIsHonoredForSortAndPageMethods() {
+        TestContext context = createContext();
+        context.hardService()
+                .saveAll(List.of(hardFixture("bravo"), hardFixture("alpha"), hardFixture("charlie")))
+                .collectList()
+                .block();
+
+        StepVerifier.create(context.hardService()
+                        .findAll(Sort.by("name").descending())
+                        .map(HardDeleteFixture::getName)
+                        .collectList())
+                .expectNext(List.of("charlie", "bravo", "alpha"))
+                .verifyComplete();
+
+        StepVerifier.create(context.hardService().findAllByCriteria(
+                        Criteria.empty(),
+                        PageRequest.of(0, 2, Sort.by("name").descending())
+                ))
+                .assertNext(page -> {
+                    assertEquals(3L, page.getTotalElements());
+                    assertEquals(List.of("charlie", "bravo"), names(page.getContent()));
+                })
+                .verifyComplete();
+    }
+
     private static TestContext createContext() {
         int databaseId = DATABASE_SEQUENCE.incrementAndGet();
         ConnectionFactory connectionFactory = ConnectionFactories.get(
@@ -480,6 +571,12 @@ class AbstractDaoServiceTest {
         SoftDeleteFixture entity = new SoftDeleteFixture();
         entity.setName(name);
         return entity;
+    }
+
+    private static List<String> names(List<? extends NamedFixture> fixtures) {
+        return fixtures.stream()
+                .map(NamedFixture::getName)
+                .toList();
     }
 
     private record TestContext(
@@ -637,12 +734,13 @@ class AbstractDaoServiceTest {
     }
 
     @Table("hard_delete_fixture")
-    static class HardDeleteFixture extends UuidEntity {
+    static class HardDeleteFixture extends UuidEntity implements NamedFixture {
 
         @Column("name")
         private String name;
 
-        String getName() {
+        @Override
+        public String getName() {
             return name;
         }
 
@@ -652,12 +750,13 @@ class AbstractDaoServiceTest {
     }
 
     @Table("soft_delete_fixture")
-    static class SoftDeleteFixture extends SoftDeleteUuidEntity {
+    static class SoftDeleteFixture extends SoftDeleteUuidEntity implements NamedFixture {
 
         @Column("name")
         private String name;
 
-        String getName() {
+        @Override
+        public String getName() {
             return name;
         }
 
@@ -671,5 +770,10 @@ class AbstractDaoServiceTest {
         private CustomMissingEntityException(String message) {
             super(message);
         }
+    }
+
+    private interface NamedFixture {
+
+        String getName();
     }
 }

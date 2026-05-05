@@ -12,6 +12,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
@@ -175,6 +179,45 @@ public abstract class AbstractDaoService<
     }
 
     /**
+     * Finds all rows with the supplied sort. Soft-delete entities return only
+     * rows with {@code deleted = false}.
+     */
+    @Transactional(readOnly = true)
+    public Flux<E> findAll(Sort sort) {
+        Objects.requireNonNull(sort, "sort must not be null");
+        return template.select(readQuery(Criteria.empty()).sort(sort), entityClass);
+    }
+
+    /**
+     * Finds one classic count-backed page. Soft-delete entities return only
+     * rows with {@code deleted = false}.
+     */
+    @Transactional(readOnly = true)
+    public Mono<Page<E>> findAll(Pageable pageable) {
+        return findAllByCriteria(Criteria.empty(), pageable);
+    }
+
+    /**
+     * Finds one classic count-backed page by criteria. Soft-delete entities
+     * combine the caller criteria with {@code deleted = false}.
+     */
+    @Transactional(readOnly = true)
+    public Mono<Page<E>> findAllByCriteria(Criteria criteria, Pageable pageable) {
+        Objects.requireNonNull(criteria, "criteria must not be null");
+        Objects.requireNonNull(pageable, "pageable must not be null");
+
+        Criteria effectiveCriteria = readCriteria(criteria);
+        Query countQuery = query(effectiveCriteria);
+        Query pageQuery = query(effectiveCriteria).with(pageable);
+
+        Mono<Long> total = template.count(countQuery, entityClass);
+        Mono<List<E>> content = template.select(pageQuery, entityClass).collectList();
+
+        return Mono.zip(content, total)
+                .map(result -> new PageImpl<>(result.getT1(), pageable, result.getT2()));
+    }
+
+    /**
      * Finds rows for the given ids. Soft-delete entities return only rows with
      * {@code deleted = false}.
      */
@@ -324,6 +367,27 @@ public abstract class AbstractDaoService<
             boundSpec = boundSpec.bind(prefix + index, valueList.get(index));
         }
         return boundSpec;
+    }
+
+    private Query readQuery(Criteria criteria) {
+        return query(readCriteria(criteria));
+    }
+
+    private Criteria readCriteria(Criteria criteria) {
+        if (!metadata.softDeleteCapable()) {
+            return criteria;
+        }
+        if (criteria.isEmpty()) {
+            return visibleCriteria();
+        }
+        return criteria.and(visibleCriteria());
+    }
+
+    private Query query(Criteria criteria) {
+        if (criteria.isEmpty()) {
+            return Query.empty();
+        }
+        return Query.query(criteria);
     }
 
     private Criteria visibleByIdCriteria(ID id) {
