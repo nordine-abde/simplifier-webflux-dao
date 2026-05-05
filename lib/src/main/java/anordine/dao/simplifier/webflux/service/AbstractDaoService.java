@@ -4,6 +4,7 @@ import anordine.dao.simplifier.webflux.entity.BaseEntity;
 import anordine.dao.simplifier.webflux.cursor.CursorCodec;
 import anordine.dao.simplifier.webflux.cursor.CursorPage;
 import anordine.dao.simplifier.webflux.cursor.IdCursor;
+import anordine.dao.simplifier.webflux.cursor.UpdatedAtIdCursor;
 import anordine.dao.simplifier.webflux.exception.DefaultEntityNotFoundExceptionFactory;
 import anordine.dao.simplifier.webflux.exception.EntityNotFoundExceptionFactory;
 import anordine.dao.simplifier.webflux.metadata.EntityMetadata;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.r2dbc.convert.EntityRowMapper;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
@@ -261,6 +263,35 @@ public abstract class AbstractDaoService<
     }
 
     /**
+     * Finds one bounded seek page ordered by updated-at and id. When both
+     * cursor values are {@code null}, this reads the first page. Soft-delete
+     * entities return only rows with {@code deleted = false}.
+     */
+    @Transactional(readOnly = true)
+    public Mono<CursorPage<E>> findAllByUpdatedAtCursor(
+            Instant cursorUpdatedAt,
+            ID cursorId,
+            int limit,
+            Sort.Direction direction
+    ) {
+        validateCursorLimit(limit);
+        validateUpdatedAtCursor(cursorUpdatedAt, cursorId);
+        Objects.requireNonNull(direction, "direction must not be null");
+
+        DatabaseClient.GenericExecuteSpec spec = updatedAtCursorSpec(
+                cursorUpdatedAt,
+                cursorId,
+                limit,
+                direction
+        );
+
+        return spec.map(new EntityRowMapper<>(entityClass, template.getConverter()))
+                .all()
+                .collectList()
+                .map(fetchedRows -> updatedAtCursorPage(fetchedRows, limit));
+    }
+
+    /**
      * Deletes a row by the entity id and returns the affected row count.
      * Soft-delete entities are updated in place instead of being physically
      * removed.
@@ -384,6 +415,18 @@ public abstract class AbstractDaoService<
         return new CursorPage<>(content, nextCursor, hasNext);
     }
 
+    private CursorPage<E> updatedAtCursorPage(List<E> fetchedRows, int limit) {
+        boolean hasNext = fetchedRows.size() > limit;
+        List<E> content = hasNext ? fetchedRows.subList(0, limit) : fetchedRows;
+        String nextCursor = hasNext
+                ? cursorCodec.encode(new UpdatedAtIdCursor<>(
+                        content.getLast().getUpdatedAt(),
+                        content.getLast().getId()
+                ))
+                : null;
+        return new CursorPage<>(content, nextCursor, hasNext);
+    }
+
     private Criteria idCursorCriteria(ID cursorId, Sort.Direction direction) {
         if (cursorId == null) {
             return Criteria.empty();
@@ -394,12 +437,61 @@ public abstract class AbstractDaoService<
         return Criteria.where(idPropertyName()).lessThan(cursorId);
     }
 
+    private DatabaseClient.GenericExecuteSpec updatedAtCursorSpec(
+            Instant cursorUpdatedAt,
+            ID cursorId,
+            int limit,
+            Sort.Direction direction
+    ) {
+        String comparison = direction.isAscending() ? ">" : "<";
+        String sql = "SELECT * FROM " + metadata.renderedTableName()
+                + updatedAtCursorWhereClause(cursorUpdatedAt, comparison)
+                + " ORDER BY " + metadata.renderedUpdatedAtColumn() + " " + direction.name()
+                + ", " + metadata.renderedIdColumn() + " " + direction.name()
+                + " LIMIT :limit";
+        DatabaseClient.GenericExecuteSpec spec = template.getDatabaseClient()
+                .sql(sql)
+                .bind("limit", limit + 1);
+        if (cursorUpdatedAt != null) {
+            spec = spec.bind("cursorUpdatedAt", cursorUpdatedAt)
+                    .bind("cursorId", cursorId);
+        }
+        if (metadata.softDeleteCapable()) {
+            spec = spec.bind("visible", false);
+        }
+        return spec;
+    }
+
+    private String updatedAtCursorWhereClause(Instant cursorUpdatedAt, String comparison) {
+        List<String> predicates = new ArrayList<>();
+        if (cursorUpdatedAt != null) {
+            predicates.add("(" + metadata.renderedUpdatedAtColumn() + " " + comparison + " :cursorUpdatedAt"
+                    + " OR (" + metadata.renderedUpdatedAtColumn() + " = :cursorUpdatedAt"
+                    + " AND " + metadata.renderedIdColumn() + " " + comparison + " :cursorId))");
+        }
+        if (metadata.softDeleteCapable()) {
+            predicates.add(metadata.requireSoftDeleteMetadata().renderedDeletedColumn() + " = :visible");
+        }
+        if (predicates.isEmpty()) {
+            return "";
+        }
+        return " WHERE " + String.join(" AND ", predicates);
+    }
+
     private void validateCursorLimit(int limit) {
         if (limit <= 0) {
             throw new IllegalArgumentException("limit must be greater than 0");
         }
         if (limit == Integer.MAX_VALUE) {
             throw new IllegalArgumentException("limit must be less than Integer.MAX_VALUE");
+        }
+    }
+
+    private void validateUpdatedAtCursor(Instant cursorUpdatedAt, ID cursorId) {
+        if ((cursorUpdatedAt == null) != (cursorId == null)) {
+            throw new IllegalArgumentException(
+                    "cursorUpdatedAt and cursorId must both be null or both be non-null"
+            );
         }
     }
 

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import anordine.dao.simplifier.webflux.cursor.CursorCodec;
+import anordine.dao.simplifier.webflux.cursor.UpdatedAtIdCursor;
 import anordine.dao.simplifier.webflux.entity.BaseEntity;
 import anordine.dao.simplifier.webflux.entity.SoftDeleteUuidEntity;
 import anordine.dao.simplifier.webflux.entity.UuidEntity;
@@ -655,6 +656,264 @@ class AbstractDaoServiceTest {
         );
     }
 
+    @Test
+    void updatedAtCursorFirstPageAscending() {
+        TestContext context = createContext();
+        Instant firstUpdatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        Instant secondUpdatedAt = Instant.parse("2026-05-05T10:16:30Z");
+        context.hardService()
+                .saveAll(List.of(
+                        hardFixture(uuid(3), "third"),
+                        hardFixture(uuid(1), "first"),
+                        hardFixture(uuid(2), "second")
+                ), true)
+                .collectList()
+                .block();
+        setHardUpdatedAt(context.client(), uuid(1), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(2), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(3), secondUpdatedAt);
+
+        StepVerifier.create(context.hardService()
+                        .findAllByUpdatedAtCursor(null, null, 2, Sort.Direction.ASC))
+                .assertNext(page -> {
+                    assertTrue(page.hasNext());
+                    assertEquals(List.of(uuid(1), uuid(2)), ids(page.content()));
+                    assertEquals(new UpdatedAtIdCursor<>(firstUpdatedAt, uuid(2)),
+                            decodeUpdatedAtCursor(page.nextCursor()));
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorNextPageAscending() {
+        TestContext context = createContext();
+        Instant firstUpdatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        Instant secondUpdatedAt = Instant.parse("2026-05-05T10:16:30Z");
+        Instant thirdUpdatedAt = Instant.parse("2026-05-05T10:17:30Z");
+        context.hardService()
+                .saveAll(List.of(
+                        hardFixture(uuid(1), "first"),
+                        hardFixture(uuid(2), "second"),
+                        hardFixture(uuid(3), "third"),
+                        hardFixture(uuid(4), "fourth")
+                ), true)
+                .collectList()
+                .block();
+        setHardUpdatedAt(context.client(), uuid(1), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(2), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(3), secondUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(4), thirdUpdatedAt);
+
+        UpdatedAtIdCursor<UUID> nextCursor = context.hardService()
+                .findAllByUpdatedAtCursor(null, null, 2, Sort.Direction.ASC)
+                .map(page -> decodeUpdatedAtCursor(page.nextCursor()))
+                .block();
+        assertNotNull(nextCursor);
+
+        StepVerifier.create(context.hardService().findAllByUpdatedAtCursor(
+                        nextCursor.updatedAt(),
+                        nextCursor.id(),
+                        2,
+                        Sort.Direction.ASC
+                ))
+                .assertNext(page -> {
+                    assertFalse(page.hasNext());
+                    assertEquals(List.of(uuid(3), uuid(4)), ids(page.content()));
+                    assertNull(page.nextCursor());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorFirstPageDescending() {
+        TestContext context = createContext();
+        Instant firstUpdatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        Instant secondUpdatedAt = Instant.parse("2026-05-05T10:16:30Z");
+        context.hardService()
+                .saveAll(List.of(
+                        hardFixture(uuid(1), "first"),
+                        hardFixture(uuid(2), "second"),
+                        hardFixture(uuid(3), "third")
+                ), true)
+                .collectList()
+                .block();
+        setHardUpdatedAt(context.client(), uuid(1), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(2), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(3), secondUpdatedAt);
+
+        StepVerifier.create(context.hardService()
+                        .findAllByUpdatedAtCursor(null, null, 2, Sort.Direction.DESC))
+                .assertNext(page -> {
+                    assertTrue(page.hasNext());
+                    assertEquals(List.of(uuid(3), uuid(2)), ids(page.content()));
+                    assertEquals(new UpdatedAtIdCursor<>(firstUpdatedAt, uuid(2)),
+                            decodeUpdatedAtCursor(page.nextCursor()));
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorNextPageDescending() {
+        TestContext context = createContext();
+        Instant firstUpdatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        Instant secondUpdatedAt = Instant.parse("2026-05-05T10:16:30Z");
+        Instant thirdUpdatedAt = Instant.parse("2026-05-05T10:17:30Z");
+        context.hardService()
+                .saveAll(List.of(
+                        hardFixture(uuid(1), "first"),
+                        hardFixture(uuid(2), "second"),
+                        hardFixture(uuid(3), "third"),
+                        hardFixture(uuid(4), "fourth")
+                ), true)
+                .collectList()
+                .block();
+        setHardUpdatedAt(context.client(), uuid(1), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(2), firstUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(3), secondUpdatedAt);
+        setHardUpdatedAt(context.client(), uuid(4), thirdUpdatedAt);
+
+        UpdatedAtIdCursor<UUID> nextCursor = context.hardService()
+                .findAllByUpdatedAtCursor(null, null, 2, Sort.Direction.DESC)
+                .map(page -> decodeUpdatedAtCursor(page.nextCursor()))
+                .block();
+        assertNotNull(nextCursor);
+
+        StepVerifier.create(context.hardService().findAllByUpdatedAtCursor(
+                        nextCursor.updatedAt(),
+                        nextCursor.id(),
+                        2,
+                        Sort.Direction.DESC
+                ))
+                .assertNext(page -> {
+                    assertFalse(page.hasNext());
+                    assertEquals(List.of(uuid(2), uuid(1)), ids(page.content()));
+                    assertNull(page.nextCursor());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorUsesIdAsDeterministicTieBreaker() {
+        TestContext context = createContext();
+        Instant updatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        context.hardService()
+                .saveAll(List.of(
+                        hardFixture(uuid(3), "third"),
+                        hardFixture(uuid(1), "first"),
+                        hardFixture(uuid(2), "second")
+                ), true)
+                .collectList()
+                .block();
+        setHardUpdatedAt(context.client(), uuid(1), updatedAt);
+        setHardUpdatedAt(context.client(), uuid(2), updatedAt);
+        setHardUpdatedAt(context.client(), uuid(3), updatedAt);
+
+        StepVerifier.create(context.hardService()
+                        .findAllByUpdatedAtCursor(null, null, 3, Sort.Direction.ASC))
+                .assertNext(page -> {
+                    assertFalse(page.hasNext());
+                    assertEquals(List.of(uuid(1), uuid(2), uuid(3)), ids(page.content()));
+                    assertNull(page.nextCursor());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorFinalPageHasNoNextCursor() {
+        TestContext context = createContext();
+        Instant updatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        context.hardService()
+                .saveAll(List.of(hardFixture(uuid(1), "first"), hardFixture(uuid(2), "second")), true)
+                .collectList()
+                .block();
+        setHardUpdatedAt(context.client(), uuid(1), updatedAt);
+        setHardUpdatedAt(context.client(), uuid(2), updatedAt);
+
+        StepVerifier.create(context.hardService()
+                        .findAllByUpdatedAtCursor(null, null, 2, Sort.Direction.ASC))
+                .assertNext(page -> {
+                    assertFalse(page.hasNext());
+                    assertEquals(List.of(uuid(1), uuid(2)), ids(page.content()));
+                    assertNull(page.nextCursor());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorSoftDeletedRowsAreExcluded() {
+        TestContext context = createContext();
+        Instant firstUpdatedAt = Instant.parse("2026-05-05T10:15:30Z");
+        Instant secondUpdatedAt = Instant.parse("2026-05-05T10:16:30Z");
+        Instant thirdUpdatedAt = Instant.parse("2026-05-05T10:17:30Z");
+        context.softService()
+                .saveAll(List.of(
+                        softFixture(uuid(1), "first"),
+                        softFixture(uuid(2), "second"),
+                        softFixture(uuid(3), "third")
+                ), true)
+                .collectList()
+                .block();
+        setSoftUpdatedAt(context.client(), uuid(1), firstUpdatedAt);
+        setSoftUpdatedAt(context.client(), uuid(2), secondUpdatedAt);
+        setSoftUpdatedAt(context.client(), uuid(3), thirdUpdatedAt);
+        markSoftDeleted(context.client(), uuid(2));
+
+        UpdatedAtIdCursor<UUID> nextCursor = context.softService()
+                .findAllByUpdatedAtCursor(null, null, 1, Sort.Direction.ASC)
+                .map(page -> {
+                    assertTrue(page.hasNext());
+                    assertEquals(List.of(uuid(1)), ids(page.content()));
+                    return decodeUpdatedAtCursor(page.nextCursor());
+                })
+                .block();
+        assertNotNull(nextCursor);
+
+        StepVerifier.create(context.softService()
+                        .findAllByUpdatedAtCursor(
+                                nextCursor.updatedAt(),
+                                nextCursor.id(),
+                                2,
+                                Sort.Direction.ASC
+                        ))
+                .assertNext(page -> {
+                    assertFalse(page.hasNext());
+                    assertEquals(List.of(uuid(3)), ids(page.content()));
+                    assertNull(page.nextCursor());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatedAtCursorRejectsInvalidLimitAndInconsistentCursor() {
+        TestContext context = createContext();
+        Instant updatedAt = Instant.parse("2026-05-05T10:15:30Z");
+
+        assertEquals(
+                "limit must be greater than 0",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> context.hardService()
+                                .findAllByUpdatedAtCursor(null, null, 0, Sort.Direction.ASC)
+                ).getMessage()
+        );
+        assertEquals(
+                "cursorUpdatedAt and cursorId must both be null or both be non-null",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> context.hardService()
+                                .findAllByUpdatedAtCursor(updatedAt, null, 1, Sort.Direction.ASC)
+                ).getMessage()
+        );
+        assertEquals(
+                "cursorUpdatedAt and cursorId must both be null or both be non-null",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> context.hardService()
+                                .findAllByUpdatedAtCursor(null, uuid(1), 1, Sort.Direction.ASC)
+                ).getMessage()
+        );
+    }
+
     private static TestContext createContext() {
         int databaseId = DATABASE_SEQUENCE.incrementAndGet();
         ConnectionFactory connectionFactory = ConnectionFactories.get(
@@ -719,6 +978,28 @@ class AbstractDaoServiceTest {
                 .verifyComplete();
     }
 
+    private static void setHardUpdatedAt(DatabaseClient client, UUID id, Instant updatedAt) {
+        setUpdatedAt(client, "hard_delete_fixture", id, updatedAt);
+    }
+
+    private static void setSoftUpdatedAt(DatabaseClient client, UUID id, Instant updatedAt) {
+        setUpdatedAt(client, "soft_delete_fixture", id, updatedAt);
+    }
+
+    private static void setUpdatedAt(DatabaseClient client, String tableName, UUID id, Instant updatedAt) {
+        StepVerifier.create(client.sql("""
+                        UPDATE "%s"
+                        SET "updated_at" = :updatedAt
+                        WHERE "id" = :id
+                        """.formatted(tableName))
+                .bind("updatedAt", updatedAt)
+                .bind("id", id)
+                .fetch()
+                .rowsUpdated())
+                .expectNext(1L)
+                .verifyComplete();
+    }
+
     private static HardDeleteFixture hardFixture(String name) {
         HardDeleteFixture entity = new HardDeleteFixture();
         entity.setName(name);
@@ -761,6 +1042,10 @@ class AbstractDaoServiceTest {
 
     private static UUID decodeIdCursor(String cursor) {
         return new CursorCodec().decodeIdCursor(cursor, UUID::fromString).id();
+    }
+
+    private static UpdatedAtIdCursor<UUID> decodeUpdatedAtCursor(String cursor) {
+        return new CursorCodec().decodeUpdatedAtIdCursor(cursor, UUID::fromString);
     }
 
     private record TestContext(
