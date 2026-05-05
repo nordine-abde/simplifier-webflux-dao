@@ -4,7 +4,7 @@
 
 It focuses on explicit, testable DAO methods instead of replacing Spring Data repository internals. Repositories stay thin, while DAO services handle entity lifecycle timestamps, required reads, soft delete, count-returning deletes, classic pagination, cursor pagination, and streaming reads.
 
-> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. T02 has added the reusable entity hierarchy. Repository and DAO-service examples below describe the planned v1 API and will become available as later implementation phases land.
+> Status: initial implementation in progress. T01 has prepared the real package structure and reactive R2DBC test foundation. T02 has added the reusable entity hierarchy. T03 has added thin repository marker interfaces. DAO-service examples below describe the planned v1 API and will become available as later implementation phases land.
 
 ## Why This Library
 
@@ -109,9 +109,9 @@ Lifecycle behavior:
 - `prePersist(true)` forces an assigned-id insert and fails when the id is missing.
 - `markAsNotNew()` clears the Spring Data insert flag after a successful save.
 
-## Planned Repositories
+## Repositories
 
-Repositories remain standard Spring Data R2DBC repositories, optionally using the library marker interface:
+Repositories remain standard Spring Data R2DBC repositories, optionally using the library marker interfaces:
 
 ```java
 import anordine.dao.simplifier.webflux.repository.SimplifiedR2dbcRepository;
@@ -121,6 +121,16 @@ public interface UserRepository
         extends SimplifiedR2dbcRepository<UserEntity, UUID> {
 }
 ```
+
+These public marker interfaces are currently available:
+
+```text
+anordine.dao.simplifier.webflux.repository.SimplifiedR2dbcRepository
+anordine.dao.simplifier.webflux.repository.SimplifiedUuidR2dbcRepository
+anordine.dao.simplifier.webflux.repository.SimplifiedSoftDeleteUuidR2dbcRepository
+```
+
+They add no lifecycle, soft-delete, or delete behavior beyond Spring Data's `ReactiveCrudRepository` contract. That behavior belongs to the DAO services.
 
 No custom `@EnableR2dbcRepositories(repositoryBaseClass = ...)` configuration is required for v1.
 
@@ -240,7 +250,7 @@ The automation requires a clean git worktree before each phase, runs tests after
 
 ## Current Limitations
 
-The current codebase contains the package/test foundation and reusable entity hierarchy. Repository markers, DAO services, exception factories, metadata helpers, pagination, streaming reads, and delete behavior are still planned for later phases.
+The current codebase contains the package/test foundation, reusable entity hierarchy, and repository marker interfaces. DAO services, exception factories, metadata helpers, pagination, streaming reads, and delete behavior are still planned for later phases.
 
 The v1 design does not include:
 
