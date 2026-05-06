@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: dao-simplifier-users-postgres
+    environment:
+      POSTGRES_DB: users_app
+      POSTGRES_USER: users_app
+      POSTGRES_PASSWORD: users_app
+    ports:
+      - "54329:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U users_app -d users_app"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - users-postgres-data:/var/lib/postgresql
+
+volumes:
+  users-postgres-data:

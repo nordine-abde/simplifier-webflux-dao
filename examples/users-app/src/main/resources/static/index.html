@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DAO Simplifier Users</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Users</h1>
+      <p>Reactive DAO service example backed by PostgreSQL and Liquibase seed data.</p>
+    </div>
+    <div class="header-actions">
+      <button id="refresh">Refresh</button>
+      <button id="count">Count</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="toolbar">
+      <label>
+        Search
+        <input id="emailContains" type="search" placeholder="email fragment">
+      </label>
+      <label>
+        Status
+        <select id="status">
+          <option value="">Any</option>
+          <option>ACTIVE</option>
+          <option>INVITED</option>
+          <option>SUSPENDED</option>
+        </select>
+      </label>
+      <label>
+        City
+        <select id="city">
+          <option value="">Any</option>
+          <option>Rome</option>
+          <option>Milan</option>
+          <option>Turin</option>
+          <option>Naples</option>
+          <option>Bologna</option>
+          <option>Florence</option>
+          <option>Venice</option>
+          <option>Genoa</option>
+          <option>Palermo</option>
+        </select>
+      </label>
+      <label>
+        Sort
+        <select id="sort">
+          <option value="email">email</option>
+          <option value="updatedAt">updatedAt</option>
+          <option value="createdAt">createdAt</option>
+          <option value="city">city</option>
+          <option value="status">status</option>
+          <option value="id">id</option>
+        </select>
+      </label>
+      <label>
+        Direction
+        <select id="direction">
+          <option>ASC</option>
+          <option>DESC</option>
+        </select>
+      </label>
+      <button id="search">Search Page</button>
+    </section>
+
+    <section class="split">
+      <form id="userForm" class="panel">
+        <h2>Create or Update</h2>
+        <label>
+          Id
+          <input id="userId" type="text" placeholder="optional UUID">
+        </label>
+        <label>
+          Email
+          <input id="email" type="email" required>
+        </label>
+        <label>
+          Display name
+          <input id="displayName" type="text" required>
+        </label>
+        <label>
+          Role
+          <select id="role">
+            <option>ADMIN</option>
+            <option>MANAGER</option>
+            <option selected>MEMBER</option>
+            <option>VIEWER</option>
+          </select>
+        </label>
+        <label>
+          Status
+          <select id="formStatus">
+            <option selected>ACTIVE</option>
+            <option>INVITED</option>
+            <option>SUSPENDED</option>
+          </select>
+        </label>
+        <label>
+          City
+          <input id="formCity" type="text" required value="Rome">
+        </label>
+        <div class="button-row">
+          <button type="submit">Save</button>
+          <button type="button" id="import">Import Id</button>
+          <button type="button" id="clear">Clear</button>
+        </div>
+      </form>
+
+      <section class="panel">
+        <h2>Operations</h2>
+        <div class="stack">
+          <button id="loadPage">Classic Page</button>
+          <button id="idCursor">Id Cursor</button>
+          <button id="updatedCursor">Updated Cursor</button>
+          <button id="rawReport">Raw SQL Page</button>
+          <button id="ndjson">NDJSON Stream</button>
+          <button id="sse">SSE Stream</button>
+          <button id="repositoryEmail">Repository Email Lookup</button>
+        </div>
+        <p id="metric" class="metric"></p>
+      </section>
+    </section>
+
+    <section class="results">
+      <div class="results-header">
+        <h2>Results</h2>
+        <div class="page-actions">
+          <button id="prevPage">Prev</button>
+          <span id="pageState">page 0</span>
+          <button id="nextPage">Next</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>City</th>
+              <th>Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="output">
+      <h2>Response</h2>
+      <pre id="output"></pre>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

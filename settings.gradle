@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = 'dao-simplifier-webflux'
 include('lib')
+include('examples:users-app')

@@ -1,0 +1,222 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f6f7f9;
+  color: #17202a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #1f6feb;
+  background: #1f6feb;
+  color: white;
+  border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+  cursor: pointer;
+}
+
+button.secondary,
+.row-actions button {
+  border-color: #c7d0dc;
+  background: white;
+  color: #17202a;
+}
+
+button.danger {
+  border-color: #c2410c;
+  background: #c2410c;
+  color: white;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #c7d0dc;
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  background: white;
+  color: #17202a;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #384253;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.4rem 1.6rem;
+  border-bottom: 1px solid #dde3ea;
+  background: white;
+}
+
+.app-header h1,
+h2,
+p {
+  margin: 0;
+}
+
+.app-header h1 {
+  font-size: 1.8rem;
+}
+
+.app-header p {
+  margin-top: 0.25rem;
+  color: #586276;
+}
+
+.header-actions,
+.button-row,
+.page-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.toolbar,
+.panel,
+.results,
+.output {
+  border: 1px solid #dde3ea;
+  background: white;
+  border-radius: 8px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, minmax(8rem, 1fr)) auto;
+  gap: 0.8rem;
+  align-items: end;
+  padding: 1rem;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.panel {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+}
+
+.panel h2,
+.results h2,
+.output h2 {
+  font-size: 1rem;
+}
+
+#userForm {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#userForm h2,
+#userForm .button-row {
+  grid-column: 1 / -1;
+}
+
+.stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.metric {
+  min-height: 1.5rem;
+  color: #586276;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #dde3ea;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+th,
+td {
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #edf0f4;
+  white-space: nowrap;
+}
+
+th {
+  font-size: 0.78rem;
+  color: #586276;
+  text-transform: uppercase;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.output {
+  padding: 1rem;
+}
+
+pre {
+  min-height: 10rem;
+  max-height: 24rem;
+  overflow: auto;
+  margin: 0.8rem 0 0;
+  padding: 0.8rem;
+  border-radius: 6px;
+  background: #101827;
+  color: #edf5ff;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 900px) {
+  .app-header,
+  .split,
+  .toolbar,
+  #userForm {
+    grid-template-columns: 1fr;
+  }
+
+  .app-header {
+    display: grid;
+  }
+}

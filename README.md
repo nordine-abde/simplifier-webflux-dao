@@ -50,6 +50,31 @@ api 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 
 Publication coordinates are not defined yet. Until the library is published, consume it as a local Gradle dependency or included build.
 
+## Example App
+
+A runnable Spring WebFlux example is available at:
+
+```text
+examples/users-app
+```
+
+It was generated from Spring Initializr and then wired into this Gradle build as `:examples:users-app`. The app uses PostgreSQL, Liquibase, 40 seeded users, a soft-delete UUID user entity, DAO-service CRUD, classic count-backed pages, criteria pages, opaque cursor pages, NDJSON and SSE streaming endpoints, raw SQL page projections, and a static browser UI served from `/`.
+
+Run it from the repository root:
+
+```bash
+docker compose -f examples/users-app/compose.yaml up -d
+./gradlew :examples:users-app:bootRun
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+See `examples/users-app/README.md` for endpoint details.
+
 ## Entity Model
 
 Hard-delete entities extend `BaseEntity<ID>` or a concrete specialization such as `UuidEntity`.
