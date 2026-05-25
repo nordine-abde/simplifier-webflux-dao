@@ -4,8 +4,6 @@
 
 It focuses on explicit, testable DAO methods instead of replacing Spring Data repository internals. Repositories stay thin, while DAO services handle entity lifecycle timestamps, required reads, soft delete, count-returning deletes, classic pagination, cursor pagination, and streaming reads.
 
-> Status: first implementation pass complete through T14. The library now includes the real package structure and reactive R2DBC test foundation, reusable entity hierarchy, thin repository marker interfaces, configurable entity-not-found exceptions, Spring Data R2DBC entity metadata resolver, DAO service save/read/delete/page/cursor/streaming methods, raw SQL page helpers for DTO projections, and public API documentation.
-
 ## Why This Library
 
 Spring Data R2DBC gives you reactive repositories, but many applications still repeat the same DAO-level behavior:

@@ -1,6 +1,8 @@
 package anordine.dao.simplifier.webflux.entity;
 
 import java.time.Instant;
+
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
@@ -17,7 +19,7 @@ import org.springframework.data.relational.core.mapping.Column;
  *
  * @param <ID> entity identifier type
  */
-public abstract class BaseEntity<ID> implements Persistable<ID> {
+public abstract class BaseEntity<ID> implements Persistable<@NonNull ID> {
 
     /**
      * Mapped entity id.

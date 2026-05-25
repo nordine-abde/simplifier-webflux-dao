@@ -38,11 +38,15 @@ class BaseEntityTest {
     }
 
     @Test
-    void uuidV7GeneratorProducesSequentiallyOrderedIds() {
-        UUID previous = UuidV7Generator.generate();
+    void uuidEntitiesProduceSequentiallyOrderedIds() {
+        TestUuidEntity first = new TestUuidEntity();
+        first.prePersist();
+        UUID previous = first.getId();
 
         for (int i = 0; i < 100; i++) {
-            UUID current = UuidV7Generator.generate();
+            TestUuidEntity entity = new TestUuidEntity();
+            entity.prePersist();
+            UUID current = entity.getId();
 
             assertTrue(Long.compareUnsigned(
                     previous.getMostSignificantBits(),

@@ -1,5 +1,7 @@
 package anordine.dao.simplifier.webflux.entity;
 
+import com.github.f4b6a3.uuid.UuidCreator;
+
 import java.util.UUID;
 
 /**
@@ -20,6 +22,6 @@ public abstract class SoftDeleteUuidEntity extends SoftDeleteEntity<UUID> {
      */
     @Override
     protected UUID generateId() {
-        return UuidV7Generator.generate();
+        return UuidCreator.getTimeOrderedEpochFast();
     }
 }
