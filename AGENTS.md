@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Repository instructions for automated and assisted development of `dao-simplifier-webflux`.
+Repository instructions for automated and assisted development of `simplifier-webflux-dao`.
 
 ## Project Context
 
@@ -17,7 +17,7 @@ Read these before implementing any task.
 ## Core Design Rules
 
 - Keep Java 25 as the configured Java version.
-- Use package root `anordine.dao.simplifier.webflux`.
+- Use package root `com.anordine.simplifier.webflux.dao`.
 - Keep repositories thin. Do not implement a custom `SimpleR2dbcRepository` base class in v1.
 - Put lifecycle, read filtering, delete behavior, cursor pagination, and raw SQL helpers in DAO services.
 - Apply soft-delete filtering only to DAO-owned read methods.

@@ -1,7 +1,11 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
     alias(libs.plugins.spring.dependency.management)
 }
+
+group = providers.gradleProperty('libraryGroup').orElse('com.anordine').get()
+version = providers.gradleProperty('libraryVersion').orElse('0.1.0-SNAPSHOT').get()
 
 repositories {
     mavenCentral()
@@ -24,6 +28,9 @@ dependencies {
 }
 
 java {
+    withSourcesJar()
+    withJavadocJar()
+
     toolchain {
         languageVersion = JavaLanguageVersion.of(libs.versions.java.get().toInteger())
     }
@@ -31,4 +38,59 @@ java {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.withType(org.gradle.api.publish.maven.tasks.GenerateMavenPom).configureEach {
+    notCompatibleWithConfigurationCache('Maven POM generation captures Gradle model objects in this build.')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifactId = 'simplifier-webflux-dao'
+
+            pom {
+                name = 'simplifier-webflux-dao'
+                description = 'DAO service helpers for Spring Data R2DBC WebFlux applications'
+                url = 'https://github.com/nordine-abde/simplifier-webflux-dao'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://github.com/nordine-abde/simplifier-webflux-dao/blob/main/LICENSE'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/nordine-abde/simplifier-webflux-dao.git'
+                    developerConnection = 'scm:git:ssh://git@github.com:nordine-abde/simplifier-webflux-dao.git'
+                    url = 'https://github.com/nordine-abde/simplifier-webflux-dao'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            def owner = providers.gradleProperty('githubPackagesOwner')
+                    .orElse(System.getenv('GITHUB_REPOSITORY_OWNER') ?: 'nordine-abde')
+                    .get()
+            def repository = providers.gradleProperty('githubPackagesRepository')
+                    .orElse('simplifier-webflux-dao')
+                    .get()
+            url = uri("https://maven.pkg.github.com/${owner}/${repository}")
+
+            credentials {
+                username = providers.gradleProperty('gpr.user')
+                        .orElse(System.getenv('GITHUB_ACTOR') ?: System.getenv('USERNAME') ?: '')
+                        .get()
+                password = providers.gradleProperty('gpr.key')
+                        .orElse(System.getenv('GITHUB_TOKEN') ?: System.getenv('TOKEN') ?: '')
+                        .get()
+            }
+        }
+    }
 }

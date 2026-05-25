@@ -1,6 +1,6 @@
-# dao-simplifier-webflux
+# simplifier-webflux-dao
 
-`dao-simplifier-webflux` is a small Java library for Spring Data R2DBC applications that want a consistent DAO-service layer for common persistence behavior.
+`simplifier-webflux-dao` is a small Java library for Spring Data R2DBC applications that want a consistent DAO-service layer for common persistence behavior.
 
 It focuses on explicit, testable DAO methods instead of replacing Spring Data repository internals. Repositories stay thin, while DAO services handle entity lifecycle timestamps, required reads, soft delete, count-returning deletes, classic pagination, cursor pagination, and streaming reads.
 
@@ -29,7 +29,7 @@ The library is built around three layers:
 The root package is:
 
 ```text
-anordine.dao.simplifier.webflux
+com.anordine.simplifier.webflux.dao
 ```
 
 The first version deliberately avoids a custom `SimpleR2dbcRepository` replacement. Consumers keep using normal Spring Data R2DBC repositories.
@@ -46,7 +46,70 @@ The project currently uses:
 api 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 ```
 
-Publication coordinates are not defined yet. Until the library is published, consume it as a local Gradle dependency or included build.
+Current publication coordinates:
+
+```text
+com.anordine:simplifier-webflux-dao:0.1.0-SNAPSHOT
+```
+
+The library is configured for GitHub Packages at:
+
+```text
+https://maven.pkg.github.com/nordine-abde/simplifier-webflux-dao
+```
+
+Until a version is published, consume it as a local Gradle dependency or included build.
+
+## GitHub Packages Publication
+
+The `:lib` module uses Gradle `maven-publish` and publishes sources and Javadocs with the binary jar.
+
+Publish manually from your machine with a classic GitHub personal access token that has `write:packages` permission:
+
+```bash
+export GITHUB_ACTOR=your-github-username
+export GITHUB_TOKEN=your-classic-token
+./gradlew :lib:publish --no-configuration-cache
+```
+
+You can override the version without editing files:
+
+```bash
+./gradlew :lib:publish -PlibraryVersion=0.1.0 --no-configuration-cache
+```
+
+The GitHub package destination and coordinates are controlled by these Gradle properties:
+
+```properties
+libraryGroup=com.anordine
+libraryVersion=0.1.0-SNAPSHOT
+githubPackagesOwner=nordine-abde
+githubPackagesRepository=simplifier-webflux-dao
+```
+
+A GitHub Actions workflow is available at `.github/workflows/publish.yml`. It runs tests and publishes to GitHub Packages with `GITHUB_TOKEN` when a GitHub release is published or when the workflow is started manually.
+
+Consume the published package from another Gradle project:
+
+```gradle
+repositories {
+    mavenCentral()
+    maven {
+        name = 'GitHubPackages'
+        url = uri('https://maven.pkg.github.com/nordine-abde/simplifier-webflux-dao')
+        credentials {
+            username = findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
+            password = findProperty('gpr.key') ?: System.getenv('GITHUB_TOKEN')
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.anordine:simplifier-webflux-dao:0.1.0-SNAPSHOT'
+}
+```
+
+For consuming private packages, the token needs `read:packages` permission. Public GitHub Packages may still require authentication when Gradle resolves the dependency.
 
 ## Example App
 
@@ -82,10 +145,10 @@ Soft-delete entities extend `SoftDeleteEntity<ID>` or `SoftDeleteUuidEntity`.
 These public base classes are currently available:
 
 ```text
-anordine.dao.simplifier.webflux.entity.BaseEntity
-anordine.dao.simplifier.webflux.entity.UuidEntity
-anordine.dao.simplifier.webflux.entity.SoftDeleteEntity
-anordine.dao.simplifier.webflux.entity.SoftDeleteUuidEntity
+com.anordine.simplifier.webflux.dao.entity.BaseEntity
+com.anordine.simplifier.webflux.dao.entity.UuidEntity
+com.anordine.simplifier.webflux.dao.entity.SoftDeleteEntity
+com.anordine.simplifier.webflux.dao.entity.SoftDeleteUuidEntity
 ```
 
 `BaseEntity<ID>` implements Spring Data `Persistable<ID>`. DAO services call `prePersist(...)` before saving and `markAsNotNew()` after a successful save so Spring Data R2DBC can choose insert or update correctly.
@@ -109,7 +172,7 @@ updated_at
 Example:
 
 ```java
-import anordine.dao.simplifier.webflux.entity.SoftDeleteUuidEntity;
+import com.anordine.simplifier.webflux.dao.entity.SoftDeleteUuidEntity;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table("users")
@@ -139,7 +202,7 @@ Lifecycle behavior:
 Repositories remain standard Spring Data R2DBC repositories, optionally using the library marker interfaces:
 
 ```java
-import anordine.dao.simplifier.webflux.repository.SimplifiedR2dbcRepository;
+import com.anordine.simplifier.webflux.dao.repository.SimplifiedR2dbcRepository;
 import java.util.UUID;
 
 public interface UserRepository
@@ -150,9 +213,9 @@ public interface UserRepository
 These public marker interfaces are currently available:
 
 ```text
-anordine.dao.simplifier.webflux.repository.SimplifiedR2dbcRepository
-anordine.dao.simplifier.webflux.repository.SimplifiedUuidR2dbcRepository
-anordine.dao.simplifier.webflux.repository.SimplifiedSoftDeleteUuidR2dbcRepository
+com.anordine.simplifier.webflux.dao.repository.SimplifiedR2dbcRepository
+com.anordine.simplifier.webflux.dao.repository.SimplifiedUuidR2dbcRepository
+com.anordine.simplifier.webflux.dao.repository.SimplifiedSoftDeleteUuidR2dbcRepository
 ```
 
 They add no lifecycle, soft-delete, or delete behavior beyond Spring Data's `ReactiveCrudRepository` contract. That behavior belongs to the DAO services.
@@ -164,7 +227,7 @@ No custom `@EnableR2dbcRepositories(repositoryBaseClass = ...)` configuration is
 Applications create concrete services by extending the abstract DAO service and passing the entity class explicitly.
 
 ```java
-import anordine.dao.simplifier.webflux.service.AbstractDaoService;
+import com.anordine.simplifier.webflux.dao.service.AbstractDaoService;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Service;
 import java.util.UUID;
@@ -185,7 +248,7 @@ public class UserDaoService
 UUID applications can extend the convenience service instead:
 
 ```java
-import anordine.dao.simplifier.webflux.service.AbstractUuidDaoService;
+import com.anordine.simplifier.webflux.dao.service.AbstractUuidDaoService;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Service;
 
@@ -220,9 +283,9 @@ dao.deleteById(id);
 These public DAO service types are currently available:
 
 ```text
-anordine.dao.simplifier.webflux.service.AbstractDaoService
-anordine.dao.simplifier.webflux.service.AbstractUuidDaoService
-anordine.dao.simplifier.webflux.service.AbstractSoftDeleteUuidDaoService
+com.anordine.simplifier.webflux.dao.service.AbstractDaoService
+com.anordine.simplifier.webflux.dao.service.AbstractUuidDaoService
+com.anordine.simplifier.webflux.dao.service.AbstractSoftDeleteUuidDaoService
 ```
 
 Implemented DAO methods:
@@ -275,8 +338,8 @@ For soft-delete entities, DAO delete methods execute metadata-based `UPDATE` SQL
 The library currently includes metadata helper types used by DAO services:
 
 ```text
-anordine.dao.simplifier.webflux.metadata.EntityMetadata
-anordine.dao.simplifier.webflux.metadata.EntityMetadataResolver
+com.anordine.simplifier.webflux.dao.metadata.EntityMetadata
+com.anordine.simplifier.webflux.dao.metadata.EntityMetadataResolver
 ```
 
 `EntityMetadataResolver` reads Spring Data R2DBC relational mapping metadata from `R2dbcEntityTemplate`. It resolves the mapped table, id property and column, lifecycle timestamp columns, and fixed soft-delete columns for entities extending `SoftDeleteEntity`. It fails fast when a required mapped property is missing.
@@ -314,12 +377,12 @@ For soft-delete entities, DAO-owned sorted, pageable, and criteria reads include
 Cursor pages are useful for efficient seek pagination. The infrastructure types are currently available:
 
 ```text
-anordine.dao.simplifier.webflux.cursor.CursorPage
-anordine.dao.simplifier.webflux.cursor.IdCursor
-anordine.dao.simplifier.webflux.cursor.UpdatedAtIdCursor
-anordine.dao.simplifier.webflux.cursor.CursorCodec
-anordine.dao.simplifier.webflux.cursor.CursorIdCodec
-anordine.dao.simplifier.webflux.cursor.CursorDecodingException
+com.anordine.simplifier.webflux.dao.cursor.CursorPage
+com.anordine.simplifier.webflux.dao.cursor.IdCursor
+com.anordine.simplifier.webflux.dao.cursor.UpdatedAtIdCursor
+com.anordine.simplifier.webflux.dao.cursor.CursorCodec
+com.anordine.simplifier.webflux.dao.cursor.CursorIdCodec
+com.anordine.simplifier.webflux.dao.cursor.CursorDecodingException
 ```
 
 `CursorCodec` encodes cursor values as opaque Base64-url strings with stable type discriminators. Applications should not parse or construct those strings directly. `AbstractDaoService` accepts a `CursorIdCodec<ID>` constructor argument for custom id types. Default DAO cursor id codecs are provided for UUID, String, Long, and Integer ids; `AbstractUuidDaoService` and `AbstractSoftDeleteUuidDaoService` configure the UUID codec automatically.
@@ -395,9 +458,9 @@ The helper does not rewrite SQL. It does not inject soft-delete predicates, so i
 Required-read methods such as `findByIdRequired(...)` use a configurable exception factory. The exception API is currently available:
 
 ```text
-anordine.dao.simplifier.webflux.exception.EntityNotFoundException
-anordine.dao.simplifier.webflux.exception.EntityNotFoundExceptionFactory
-anordine.dao.simplifier.webflux.exception.DefaultEntityNotFoundExceptionFactory
+com.anordine.simplifier.webflux.dao.exception.EntityNotFoundException
+com.anordine.simplifier.webflux.dao.exception.EntityNotFoundExceptionFactory
+com.anordine.simplifier.webflux.dao.exception.DefaultEntityNotFoundExceptionFactory
 ```
 
 By default, the library throws `EntityNotFoundException` with a message containing the entity simple name and id. Applications can provide their own `EntityNotFoundExceptionFactory` to map missing rows to domain-specific runtime exceptions.

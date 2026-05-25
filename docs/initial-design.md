@@ -1,6 +1,6 @@
 # Initial Design
 
-This document is the implementation guideline for `dao-simplifier-webflux`.
+This document is the implementation guideline for `simplifier-webflux-dao`.
 
 The library will provide a small DAO-service abstraction on top of Spring Data R2DBC. It is intentionally not a custom `SimpleR2dbcRepository` replacement for the first version. The goal is to keep behavior explicit, easy to test, and independent from Spring Data repository internals.
 
@@ -21,16 +21,16 @@ In practice:
 Use this root package:
 
 ```text
-anordine.dao.simplifier.webflux
+com.anordine.simplifier.webflux.dao
 ```
 
 Recommended subpackages:
 
 ```text
-anordine.dao.simplifier.webflux.entity
-anordine.dao.simplifier.webflux.repository
-anordine.dao.simplifier.webflux.service
-anordine.dao.simplifier.webflux.exception
+com.anordine.simplifier.webflux.dao.entity
+com.anordine.simplifier.webflux.dao.repository
+com.anordine.simplifier.webflux.dao.service
+com.anordine.simplifier.webflux.dao.exception
 ```
 
 ## Dependencies

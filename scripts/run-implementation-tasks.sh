@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CODEX_BIN="${CODEX_BIN:-codex}"
 TEST_COMMAND="${TEST_COMMAND:-./gradlew test}"
-LOG_DIR="${LOG_DIR:-${TMPDIR:-/tmp}/dao-simplifier-webflux-codex-task-logs}"
+LOG_DIR="${LOG_DIR:-${TMPDIR:-/tmp}/simplifier-webflux-dao-codex-task-logs}"
 
 TASK_IDS=(
   T01
@@ -67,7 +67,7 @@ Usage:
 Environment:
   CODEX_BIN      Codex executable. Default: codex
   TEST_COMMAND   Verification command after each task. Default: ./gradlew test
-  LOG_DIR        Directory for Codex task logs. Default: /tmp/dao-simplifier-webflux-codex-task-logs
+  LOG_DIR        Directory for Codex task logs. Default: /tmp/simplifier-webflux-dao-codex-task-logs
 
 The script requires a clean git worktree before each task so each phase can be
 committed independently. Codex runs as:
@@ -110,7 +110,7 @@ run_task() {
   mkdir -p "$LOG_DIR"
 
   prompt="$(cat <<EOF
-You are implementing one phase of dao-simplifier-webflux.
+You are implementing one phase of simplifier-webflux-dao.
 
 Task: $task_id - $title
 
@@ -129,7 +129,7 @@ Required workflow:
 
 Constraints:
 - Keep Java 25.
-- Use package root anordine.dao.simplifier.webflux.
+- Use package root com.anordine.simplifier.webflux.dao.
 - Do not implement later tasks unless a tiny support type is unavoidable for this task.
 - Do not revert unrelated user changes.
 - Do not leave generated org.example sample code once task T01 is complete.

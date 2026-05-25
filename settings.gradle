@@ -10,6 +10,6 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'dao-simplifier-webflux'
+rootProject.name = 'simplifier-webflux-dao'
 include('lib')
 include('examples:users-app')

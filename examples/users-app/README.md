@@ -1,6 +1,6 @@
 # Users Example App
 
-This Spring WebFlux application demonstrates `dao-simplifier-webflux` against PostgreSQL.
+This Spring WebFlux application demonstrates `simplifier-webflux-dao` against PostgreSQL.
 
 It uses:
 

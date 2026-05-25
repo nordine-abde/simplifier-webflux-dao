@@ -1,6 +1,6 @@
 # Implementation Tasks
 
-This is the phased implementation backlog for `dao-simplifier-webflux`.
+This is the phased implementation backlog for `simplifier-webflux-dao`.
 
 Each task is intended to be implemented independently by an automated Codex run. Before starting any task, re-read:
 
@@ -21,8 +21,8 @@ Goal: prepare the library for real R2DBC implementation and tests.
 Scope:
 
 - Remove the generated `org.example` sample library and sample test.
-- Create the root package structure under `lib/src/main/java/anordine/dao/simplifier/webflux`.
-- Create matching test package structure under `lib/src/test/java/anordine/dao/simplifier/webflux`.
+- Create the root package structure under `lib/src/main/java/com/anordine/simplifier/webflux/dao`.
+- Create matching test package structure under `lib/src/test/java/com/anordine/simplifier/webflux/dao`.
 - Add test dependencies needed for reactive R2DBC tests, such as Reactor test support and an in-memory R2DBC driver.
 - Keep Java 25 as the configured toolchain.
 - Add minimal smoke tests proving the test runtime starts and Gradle can execute the test suite.
