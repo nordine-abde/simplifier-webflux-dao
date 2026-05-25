@@ -5,11 +5,6 @@ package anordine.dao.simplifier.webflux.exception;
  */
 public final class DefaultEntityNotFoundExceptionFactory implements EntityNotFoundExceptionFactory {
 
-    /**
-     * Creates the default exception factory.
-     */
-    public DefaultEntityNotFoundExceptionFactory() {
-    }
 
     /**
      * Creates an {@link EntityNotFoundException}.

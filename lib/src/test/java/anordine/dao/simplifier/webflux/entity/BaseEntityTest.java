@@ -23,12 +23,35 @@ class BaseEntityTest {
     @Test
     void uuidEntityGeneratesIdWhenAbsent() {
         TestUuidEntity entity = new TestUuidEntity();
+        long before = System.currentTimeMillis();
 
         entity.prePersist();
+        long after = System.currentTimeMillis();
 
         assertNotNull(entity.getId());
-        assertInstanceOf(UUID.class, entity.getId());
+        UUID generatedId = assertInstanceOf(UUID.class, entity.getId());
+        assertEquals(7, generatedId.version());
+        assertEquals(2, generatedId.variant());
+        assertTrue(uuidV7TimestampMillis(generatedId) >= before);
+        assertTrue(uuidV7TimestampMillis(generatedId) <= after);
         assertTrue(entity.isNew());
+    }
+
+    @Test
+    void uuidV7GeneratorProducesSequentiallyOrderedIds() {
+        UUID previous = UuidV7Generator.generate();
+
+        for (int i = 0; i < 100; i++) {
+            UUID current = UuidV7Generator.generate();
+
+            assertTrue(Long.compareUnsigned(
+                    previous.getMostSignificantBits(),
+                    current.getMostSignificantBits()
+            ) < 0);
+            assertEquals(7, current.version());
+            assertEquals(2, current.variant());
+            previous = current;
+        }
     }
 
     @Test
@@ -124,6 +147,10 @@ class BaseEntityTest {
         Column column = field.getAnnotation(Column.class);
         assertNotNull(column);
         assertEquals(columnName, column.value());
+    }
+
+    private static long uuidV7TimestampMillis(UUID uuid) {
+        return uuid.getMostSignificantBits() >>> 16;
     }
 
     private static class TestUuidEntity extends UuidEntity {

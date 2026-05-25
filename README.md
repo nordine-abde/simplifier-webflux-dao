@@ -92,6 +92,8 @@ anordine.dao.simplifier.webflux.entity.SoftDeleteUuidEntity
 
 `BaseEntity<ID>` implements Spring Data `Persistable<ID>`. DAO services call `prePersist(...)` before saving and `markAsNotNew()` after a successful save so Spring Data R2DBC can choose insert or update correctly.
 
+`UuidEntity` and `SoftDeleteUuidEntity` generate UUIDv7 identifiers by default. They are stored in normal database `UUID` columns, while their timestamp-first layout gives primary-key indexes better insert locality than random UUIDv4 values.
+
 Soft-delete entities have fixed fields:
 
 ```text
@@ -128,7 +130,7 @@ public class UserEntity extends SoftDeleteUuidEntity {
 
 Lifecycle behavior:
 
-- `prePersist()` generates an id when absent.
+- `prePersist()` generates an id when absent. UUID specializations generate UUIDv7 ids.
 - `createdAt` is set when preparing an insert.
 - `updatedAt` is refreshed every time `prePersist(...)` runs.
 - `prePersist(true)` forces an assigned-id insert and fails when the id is missing.

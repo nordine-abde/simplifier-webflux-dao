@@ -10,16 +10,16 @@ public abstract class SoftDeleteUuidEntity extends SoftDeleteEntity<UUID> {
     /**
      * Creates a UUID soft-delete entity.
      */
-    public SoftDeleteUuidEntity() {
+    protected SoftDeleteUuidEntity() {
     }
 
     /**
-     * Generates a random UUID for new soft-delete entities.
+     * Generates a UUIDv7 identifier for new soft-delete entities.
      *
-     * @return generated UUID
+     * @return generated UUIDv7 identifier
      */
     @Override
     protected UUID generateId() {
-        return UUID.randomUUID();
+        return UuidV7Generator.generate();
     }
 }

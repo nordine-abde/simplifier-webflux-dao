@@ -47,7 +47,7 @@ public abstract class BaseEntity<ID> implements Persistable<ID> {
     /**
      * Creates a base entity.
      */
-    public BaseEntity() {
+    protected BaseEntity() {
     }
 
     /**

@@ -31,7 +31,7 @@ public abstract class SoftDeleteEntity<ID> extends BaseEntity<ID> {
     /**
      * Creates a soft-delete entity.
      */
-    public SoftDeleteEntity() {
+    protected SoftDeleteEntity() {
     }
 
     /**

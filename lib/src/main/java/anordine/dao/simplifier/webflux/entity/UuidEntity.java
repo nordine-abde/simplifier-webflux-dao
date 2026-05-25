@@ -10,16 +10,16 @@ public abstract class UuidEntity extends BaseEntity<UUID> {
     /**
      * Creates a UUID hard-delete entity.
      */
-    public UuidEntity() {
+    protected UuidEntity() {
     }
 
     /**
-     * Generates a random UUID for new hard-delete entities.
+     * Generates a UUIDv7 identifier for new hard-delete entities.
      *
-     * @return generated UUID
+     * @return generated UUIDv7 identifier
      */
     @Override
     protected UUID generateId() {
-        return UUID.randomUUID();
+        return UuidV7Generator.generate();
     }
 }

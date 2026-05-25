@@ -122,13 +122,15 @@ Behavior:
 
 ### UUID Entity
 
-Create a UUID specialization:
+Create a UUID specialization. UUID specializations generate UUIDv7 identifiers
+by default so database UUID primary-key indexes get timestamp-first insert
+locality:
 
 ```java
 public abstract class UuidEntity extends BaseEntity<UUID> {
     @Override
     protected UUID generateId() {
-        return UUID.randomUUID();
+        return UuidV7Generator.generate();
     }
 }
 ```
@@ -153,7 +155,7 @@ Create a UUID specialization if useful:
 public abstract class SoftDeleteUuidEntity extends SoftDeleteEntity<UUID> {
     @Override
     protected UUID generateId() {
-        return UUID.randomUUID();
+        return UuidV7Generator.generate();
     }
 }
 ```

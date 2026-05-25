@@ -21,11 +21,13 @@ public final class CursorCodec {
     private static final String UPDATED_AT_ID_TYPE = "UPDATED_AT_ID";
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
+    public static final String CURSOR_MUST_NOT_BE_NULL = "cursor must not be null";
 
     /**
      * Creates a cursor codec.
      */
     public CursorCodec() {
+        //this class should probability be a static methods class FIX-ME
     }
 
     /**
@@ -39,7 +41,7 @@ public final class CursorCodec {
      * @return opaque Base64-url cursor string
      */
     public String encode(IdCursor<?> cursor) {
-        Objects.requireNonNull(cursor, "cursor must not be null");
+        Objects.requireNonNull(cursor, CURSOR_MUST_NOT_BE_NULL);
         return encodePayload(ID_TYPE + "\n" + encodeField(cursor.id()));
     }
 
@@ -52,7 +54,7 @@ public final class CursorCodec {
      * @return opaque Base64-url cursor string
      */
     public <ID> String encode(IdCursor<ID> cursor, Function<ID, String> idEncoder) {
-        Objects.requireNonNull(cursor, "cursor must not be null");
+        Objects.requireNonNull(cursor, CURSOR_MUST_NOT_BE_NULL);
         Objects.requireNonNull(idEncoder, "idEncoder must not be null");
         return encodePayload(ID_TYPE + "\n" + encodeStringField(idEncoder.apply(cursor.id())));
     }
@@ -68,7 +70,7 @@ public final class CursorCodec {
      * @return opaque Base64-url cursor string
      */
     public String encode(UpdatedAtIdCursor<?> cursor) {
-        Objects.requireNonNull(cursor, "cursor must not be null");
+        Objects.requireNonNull(cursor, CURSOR_MUST_NOT_BE_NULL);
         return encodePayload(UPDATED_AT_ID_TYPE
                 + "\n" + encodeField(cursor.updatedAt())
                 + "\n" + encodeField(cursor.id()));
@@ -83,7 +85,7 @@ public final class CursorCodec {
      * @return opaque Base64-url cursor string
      */
     public <ID> String encode(UpdatedAtIdCursor<ID> cursor, Function<ID, String> idEncoder) {
-        Objects.requireNonNull(cursor, "cursor must not be null");
+        Objects.requireNonNull(cursor, CURSOR_MUST_NOT_BE_NULL);
         Objects.requireNonNull(idEncoder, "idEncoder must not be null");
         return encodePayload(UPDATED_AT_ID_TYPE
                 + "\n" + encodeField(cursor.updatedAt())
@@ -181,7 +183,7 @@ public final class CursorCodec {
     }
 
     private String[] decodeParts(String cursor, String expectedType, int expectedPartCount) {
-        Objects.requireNonNull(cursor, "cursor must not be null");
+        Objects.requireNonNull(cursor, CURSOR_MUST_NOT_BE_NULL);
         String payload = decodeBase64(cursor, "Malformed cursor: value is not valid Base64-url");
         String[] parts = payload.split("\n", -1);
         String actualType = parts[0];
