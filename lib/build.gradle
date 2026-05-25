@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'io.spring.dependency-management' version '1.1.7'
+    alias(libs.plugins.spring.dependency.management)
 }
 
 repositories {
@@ -9,23 +9,23 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
+        mavenBom libs.spring.boot.dependencies.get().toString()
     }
 }
 
 dependencies {
-    api 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    api libs.spring.boot.starter.data.r2dbc
+    implementation libs.uuid.creator
 
     testImplementation libs.junit.jupiter
-    testImplementation 'io.projectreactor:reactor-test'
-    testRuntimeOnly 'io.r2dbc:r2dbc-h2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'com.github.f4b6a3:uuid-creator:6.1.1'
+    testImplementation libs.reactor.test
+    testRuntimeOnly libs.r2dbc.h2
+    testRuntimeOnly libs.junit.platform.launcher
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get().toInteger())
     }
 }
 
