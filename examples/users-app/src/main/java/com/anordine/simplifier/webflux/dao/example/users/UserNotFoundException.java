@@ -1,0 +1,8 @@
+package com.anordine.simplifier.webflux.dao.example.users;
+
+public class UserNotFoundException extends RuntimeException {
+
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
